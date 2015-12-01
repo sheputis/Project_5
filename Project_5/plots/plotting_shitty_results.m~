@@ -1,0 +1,8 @@
+x=linspace(0,1,9);
+for i=1:7
+    
+plot(x,crank_nik_n_10(i,:));
+hold('on');
+end
+xlabel('x');ylabel('y');title('11 gridpoints')
+legend('times up to 7.5*10^{-3}')

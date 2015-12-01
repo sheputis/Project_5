@@ -1,0 +1,380 @@
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <vector>
+
+using namespace std;
+ofstream ofile;
+
+void solve(double* a, double* b, double* c, double* d, int n);
+void explicit_scheme(double d, int n,int n_t,double dx); //self explanatory function names.
+void implicit_scheme(double d, int n,int n_t,double dx);
+void Crank_Nicolson(double d, int n, int n_t, double dx);
+void thomas_algorithm(const std::vector<double>& a,
+                      const std::vector<double>& b,
+                      const std::vector<double>& c,
+                      const std::vector<double>& d,
+                      std::vector<double>& f);
+void test();
+
+void output(double *,int);
+
+
+
+
+inline double init_values(double x,double d){
+ //   cout <<-1+x/d<< " ";
+    return -1+x/d;
+
+}
+
+
+
+int main()
+{
+    // this is going to be the output file for the program:
+    char *outfilename;
+    outfilename= "test";
+    ofile.open(outfilename);
+
+    double d=1.;
+    int n=100;
+    int n_t=20;  //total amount of time intervals to loop through.
+    double dx = d/n;
+
+    for(n_t=1;n_t<5;n_t++){
+        cout<< " hey";
+         Crank_Nicolson(d,n,n_t,dx);
+    }
+
+   //   implicit_scheme(d,n,n_t,dx);
+   // Crank_Nicolson(d,n,n_t,dx);
+    //  explicit_scheme(d,n,n_t,dx);
+ //   cout << "Hello World!"<< d << endl;
+
+
+
+// This code below test the function solve, which solves tridiagonal matrix system.
+/*
+      int n = 4;
+        double a[4] = { 0, -1, -1, -1 };
+        double b[4] = { 4,  4,  4,  4 };
+        double c[4] = {-1, -1, -1,  0 };
+        double d[4] = { 5,  5, 10, 23 };
+        // results    { 2,  3,  5, 7  }
+        solve(a,b,c,d,n);
+        for (int i = 0; i < n; i++) {
+            cout << d[i] << endl;
+        }
+        cout << endl << "n= " << n << endl << "n is not changed hooray !!";*/
+
+
+
+
+    return 0;
+}
+
+
+void solve(double* a, double* b, double* c, double* d, int n) {
+    /*
+    // n is the number of unknowns
+
+    |b0 c0 0 ||x0| |d0|
+    |a1 b1 c1||x1|=|d1|
+    |0  a2 b2||x2| |d2|
+
+    1st iteration: b0x0 + c0x1 = d0 -> x0 + (c0/b0)x1 = d0/b0 ->
+
+        x0 + g0x1 = r0               where g0 = c0/b0        , r0 = d0/b0
+
+    2nd iteration:     | a1x0 + b1x1   + c1x2 = d1
+        from 1st it.: -| a1x0 + a1g0x1        = a1r0
+                    -----------------------------
+                          (b1 - a1g0)x1 + c1x2 = d1 - a1r0
+
+        x1 + g1x2 = r1               where g1=c1/(b1 - a1g0) , r1 = (d1 - a1r0)/(b1 - a1g0)
+
+    3rd iteration:      | a2x1 + b2x2   = d2
+        from 2st it. : -| a2x1 + a2g1x2 = a2r2
+                       -----------------------
+                       (b2 - a2g1)x2 = d2 - a2r2
+        x2 = r2                      where                     r2 = (d2 - a2r2)/(b2 - a2g1)
+    Finally we have a triangular matrix:
+    |1  g0 0 ||x0| |r0|
+    |0  1  g1||x1|=|r1|
+    |0  0  1 ||x2| |r2|
+
+    Condition: ||bi|| > ||ai|| + ||ci||
+
+    in this version the c matrix reused instead of g
+    and             the d matrix reused instead of r and x matrices to report results
+    Written by Keivan Moradi, 2014
+    */
+    n--; // since we start from x0 (not x1)
+    c[0] /= b[0];
+    d[0] /= b[0];
+
+    for (int i = 1; i < n; i++) {
+    c[i] /= b[i] - a[i]*c[i-1];
+        d[i] = (d[i] - a[i]*d[i-1]) / (b[i] - a[i]*c[i-1]);
+    }
+
+    d[n] = (d[n] - a[n]*d[n-1]) / (b[n] - a[n]*c[n-1]);
+
+    for (int i = n; i-- > 0;) {
+        d[i] -= c[i]*d[i+1];
+    }
+}
+
+void explicit_scheme(double d, int n, int n_t, double dx){
+
+
+
+
+    double dt=0.25*dx*dx; // time interval defined by the instability condition
+    double alpha =dt/(dx*dx); // the constant of stability.
+    double *u;
+    double *u_next;
+    u=new double[n+1]; // an array of n+1 elements that describe the n+1 grid points on the x axis
+    u_next=new double[n+1];// u after a time step dt
+
+    //initializing array of particle density;
+    u[0]=1;u_next[0]=1;u_next[n]=0;
+    for(int i=1;i<n+1;i++){u[i]=0;}
+    for (int j=0; j<n_t; j++){
+        for(int i=1; i<n;i++){
+            u_next[i]=alpha*u[i-1]+alpha*u[i+1]+(1-2*alpha)*u[i];
+        }
+        for(int i=1;i<(n);i++){
+            u[i]=u_next[i];
+        }
+    }
+
+    //initializing array of particle density;
+    /*
+    u[0]=0;u[n]=0;u_next[0]=0;u_next[n]=0;
+    for(int i=1;i<n;i++){u[i]=init_values(dx*i,d);}
+    for (int j=0; j<n_t; j++){
+        for(int i=1; i<n;i++){
+            u_next[i]=alpha*u[i-1]+alpha*u[i+1]+(1-2*alpha)*u[i];
+        }
+        for(int i=1;i<(n);i++){
+            u[i]=u_next[i];
+        }
+    }*/
+    // transforming u back to the initial frame of reference.
+  /*  for(int i=1;i<(n-1);i++){
+        u[i]=u[i]-init_values(dx*(i),d);
+    }*/
+    output(u,n+1);
+
+}
+
+
+void implicit_scheme(double d, int n, int n_t, double dx){
+    double dt=0.25*dx*dx; // time interval defined by the instability condition
+    double alpha =dt/(dx*dx); // the constant of stability.
+
+    double a[n-1];double b[n-1];double c[n-1]; //these are the three diagonal arrays of a tridiagonal matrix.
+    //a is left subdiagonal, b is main diagonal and c is right subdiagonal.
+    //defining values of these diagonals:
+    a[0]=0;a[n-2]=-alpha;
+    c[0]=-alpha;c[n-2]=0;
+    b[0]=(1+2*alpha);b[n-2]=(1+2*alpha);
+    //initial values:
+    double u[n-1];
+    for(int i=1;i<(n);i++){u[i-1]=init_values(dx*i,d);}
+    for(int i=1;i<(n-2);i++){
+        a[i]=-alpha;
+        b[i]=1+2*alpha;
+        c[i]=-alpha;
+    }
+    for(int i=0;i<n-1;i++){cout << u[i]<< " ";};cout<<endl;
+    //calculating u for every time step:
+    for(int t_step=0;t_step<n_t;t_step++){
+        solve(a,b,c,u,n-1);
+                 for(int i=0;i<n-1;i++){cout << u[i]<< " ";};cout<<endl;
+    }
+    // transforming u back to the initial frame of reference.
+    for(int i=0;i<(n-1);i++){
+        u[i]=u[i]-init_values(dx*(i+1),d);
+    }
+
+    output(u,n-1);
+
+
+}
+void Crank_Nicolson(double d, int n, int n_t, double dx){
+    double dt=0.25*dx*dx; // time interval defined by the instability condition
+    double alpha =dt/(dx*dx); // the constant of stability.
+    //1) Left side of equation:
+    double u[n+1];double v[n-1]; //vectors holding the x-dimensional values.
+    // initial conditions:
+    u[0]=0;u[n]=0;
+    for(int i=1;i<n;i++){u[i]=init_values(dx*i,d);}
+    for(int i=1;i<n;i++){v[i]=alpha*u[i-1]+(2-2*alpha)*u[i]+alpha*u[i+1];}
+    //2) Right side of equation:
+    double a[n-1];double b[n-1];double c[n-1]; //these are the three diagonal arrays of a tridiagonal matrix.
+    //a is left subdiagonal, b is main diagonal and c is right subdiagonal.
+    //defining values of these diagonals:
+    a[0]=0;a[n-2]=-alpha;
+    c[0]=-alpha;c[n-2]=0;
+    b[0]=(2+2*alpha);b[n-2]=(2+2*alpha);
+    for(int i=1;i<(n-2);i++){
+        a[i]=-alpha;
+        b[i]=2+2*alpha;
+        c[i]=-alpha;
+    }
+    //calculating v for every time step:
+    for(int t_step=0;t_step<n_t;t_step++){
+        solve(a,b,c,v,n-1);
+    }
+    // transforming u back to the initial frame of reference.
+    for(int i=0;i<(n-1);i++){
+        v[i]=v[i]-init_values(dx*(i+1),d);
+    }
+     output(v,n-1);
+}
+
+
+
+void output(double * u,int n){
+    ofile << " ;";
+    for(int i=0; i<n;i++){
+         ofile<<u[i]<<" ";
+    }
+}
+
+
+
+
+// Vectors a, b, c and d are const. They will not be modified
+// by the function. Vector f (the solution vector) is non-const
+// and thus will be calculated and updated by the function.
+
+void thomas_algorithm(const std::vector<double>& a,
+                      const std::vector<double>& b,
+                      const std::vector<double>& c,
+                      const std::vector<double>& d,
+                      std::vector<double>& f) {
+  size_t N = d.size();
+
+  // Create the temporary vectors
+  // Note that this is inefficient as it is possible to call
+  // this function many times. A better implementation would
+  // pass these temporary matrices by non-const reference to
+  // save excess allocation and deallocation
+  std::vector<double> c_star(N, 0.0);
+  std::vector<double> d_star(N, 0.0);
+
+  // This updates the coefficients in the first row
+  // Note that we should be checking for division by zero here
+  c_star[0] = c[0] / b[0];
+  d_star[0] = d[0] / b[0];
+
+  // Create the c_star and d_star coefficients in the forward sweep
+  for (int i=1; i<N; i++) {
+    double m = 1.0 / (b[i] - a[i] * c_star[i-1]);
+    c_star[i] = c[i] * m;
+    d_star[i] = (d[i] - a[i] * d_star[i-1]) * m;
+  }
+
+  // This is the reverse sweep, used to update the solution vector f
+  for (int i=N-1; i-- > 0; ) {
+    f[i] = d_star[i] - c_star[i] * d[i+1];
+  }
+}
+
+// Although thomas_algorithm provides everything necessary to solve
+// a tridiagonal system, it is helpful to wrap it up in a "real world"
+// example. The main function below uses a tridiagonal system from
+// a Boundary Value Problem (BVP). This is the discretisation of the
+// 1D heat equation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void test(){
+
+    // Create a Finite Difference Method (FDM) mesh with 13 points
+     // using the Crank-Nicolson method to solve the discretised
+     // heat equation.
+
+    //i change it to be N+2 meshpoints, thus N unknowns and 2 boundaries, dx is then 1/N+1
+     size_t N = 100;
+     double delta_x = 1.0/static_cast<double>(N+1);
+     double delta_t = 0.001;
+     double r = delta_t/(delta_x*delta_x);
+
+ //    double dx=1.0/static_cast<double>(N);
+  //   double dt=0.25*dx*dx;
+   //  double alpha =dt/(dx*dx);
+
+     // First we create the vectors to store the coefficients
+     std::vector<double> a(N-1, -r/2.0);
+     std::vector<double> b(N, 1.0+r);
+     std::vector<double> c(N-1, -r/2.0);
+     std::vector<double> d(N, 0.0);
+     std::vector<double> f(N, 0.0);
+
+     // Fill in the current time step initial value
+     // vector using three peaks with various amplitudes
+     //f[5] = 1; f[6] = 2; f[7] = 1;
+
+               for(int i=0;i<(N);i++){
+                   f[i]=-(delta_x*(i+1))*(delta_x*(i+1)-1);//init_values(dx*static_cast<double>(i),d);
+               }
+
+     // We output the solution vector f, prior to a
+     // new time-step
+     std::cout << "f = (";
+     for (int i=0; i<N; i++) {
+       std::cout << f[i];
+       if (i < N-1) {
+         std:: cout << ", ";
+       }
+     }
+     std::cout << ")" << std::endl << std::endl;
+
+     // Fill in the current time step vector d
+     for (int i=1; i<N-1; i++) {
+       d[i] = r*0.5*f[i+1] + (1.0-r)*f[i] + r*0.5*f[i-1];
+     }
+
+     // Now we solve the tridiagonal system
+     for(int time=0;time<10;time++){
+     thomas_algorithm(a, b, c, d, f);
+     // Fill in the current time step vector d
+     for (int i=1; i<N-1; i++) {
+       d[i] = r*0.5*f[i+1] + (1.0-r)*f[i] + r*0.5*f[i-1];
+     }
+
+     }
+
+     // Finally we output the solution vector f
+     ofile << "f = (";
+     for (int i=0; i<N; i++) {
+       ofile << f[i];
+       if (i < N-1) {
+         ofile << ", ";
+       }
+     }
+     ofile << ")" << endl;
+
+
+}

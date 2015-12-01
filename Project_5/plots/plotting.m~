@@ -1,0 +1,19 @@
+%11 gridpoints
+x=linspace(0,1,11);
+plot(x,u_expl_n_10_t_20)
+hold('on')
+plot(x,u_expl_n_10_t_60)
+xlabel('x')
+ylabel('y')
+title('11 gridpoints')
+legend('20 time steps','60 time steps')
+%101 gridpoints
+figure()
+x=linspace(0,1,101);
+plot(x,u_expl_n_10_t_20)
+hold('on')
+plot(x,u_expl_n_10_t_60)
+xlabel('x')
+ylabel('y')
+title('21 gridpoints')
+legend('20 time steps','60 time steps')
