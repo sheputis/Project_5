@@ -2,7 +2,7 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
-
+#include <lib.h>
 using namespace std;
 ofstream ofile;
 
@@ -18,6 +18,8 @@ void thomas_algorithm(const std::vector<double>& a,
 void test();
 
 void output(double *,int);
+
+void random_walk(int n);
 
 
 
@@ -37,16 +39,16 @@ int main()
     outfilename= "test";
     ofile.open(outfilename);
 
-    double d=1.;
-    int n=100;
+    double d=1.; //length of the x interval
+    int n=100;    //n+1 is the number of grid points, n is the number of intervals the length is cut in.
     int n_t=20;  //total amount of time intervals to loop through.
     double dx = d/n;
-
+/*
     for(n_t=1;n_t<5;n_t++){
         cout<< " hey";
          Crank_Nicolson(d,n,n_t,dx);
     }
-
+*/
    //   implicit_scheme(d,n,n_t,dx);
    // Crank_Nicolson(d,n,n_t,dx);
     //  explicit_scheme(d,n,n_t,dx);
@@ -68,6 +70,8 @@ int main()
         }
         cout << endl << "n= " << n << endl << "n is not changed hooray !!";*/
 
+
+    random_walk(n);
 
 
 
@@ -238,8 +242,9 @@ void Crank_Nicolson(double d, int n, int n_t, double dx){
 
 
 
-void output(double * u,int n){
+void output(double * u,int n){ //takes an array u of length n and outputs in a file
     ofile << " ;";
+     cout<< "HHHEEEE";
     for(int i=0; i<n;i++){
          ofile<<u[i]<<" ";
     }
@@ -290,24 +295,6 @@ void thomas_algorithm(const std::vector<double>& a,
 // example. The main function below uses a tridiagonal system from
 // a Boundary Value Problem (BVP). This is the discretisation of the
 // 1D heat equation.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void test(){
 
@@ -375,6 +362,36 @@ void test(){
        }
      }
      ofile << ")" << endl;
+}
+
+void random_walk(int n){
+    double x[n+1];//the x axis whithin which the particles diffuse.
+    for(int i=0;i<n+1;i++){x[i]=0;}
+
+
+    long idum;
+    double r;
+    int N_T;
+    int pos;
+    idum=-1;
+
+
+    for(int j=0;j<100000;j++){
+    pos=0;
+    N_T=0;
+    while(pos>-1 && pos<n){
+        N_T++;
+        x[pos]=x[pos]+1;
+        r = ran1(&idum);
+        if(r>0.5){pos=pos+1;}else{pos=pos-1;} // depending on the probability, the particle goes either left or right
+                                             // if outside the array, we generate a new particle,
+                           //if inside, we update the position by increasing its value by 1.
+
+        if(N_T>200){break;}
+    }
+}  double divisor=static_cast<double>(x[0]); //scaling
+    for(int i=0;i<n+1;i++){x[i]=double(x[i])/divisor;}
+    output(x,n+1);
 
 
 }
