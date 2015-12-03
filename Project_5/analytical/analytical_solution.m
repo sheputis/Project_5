@@ -18,7 +18,7 @@ xlabel('x');ylabel('y');title('analytical solution')
 
 hold('on');
 
-t=0.0015;    
+t=0.04;    
 x=linspace(0,L,100);
 u=x*0;
 for n=1:1000
@@ -32,5 +32,5 @@ u=u+((x*0+1)-x);
 plot(x,u)
 hold('on');
 
-legend('time = 5*10^{-4}','time = 1.5*10^{-3}')
+legend('time = 0.01','time = 0.04')
 %end
