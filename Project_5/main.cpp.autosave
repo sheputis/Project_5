@@ -1,4 +1,4 @@
-
+// Project 5 Diffusion  Arnoldas seputis 
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -11,6 +11,8 @@ void solve(double* a, double* b, double* c, double* d, int n); //the imported tr
 void explicit_scheme(double d, int n,int n_t,double dx); //self explanatory function names.
 void implicit_scheme(double d, int n,int n_t,double dx);
 void Crank_Nicolson(double d, int n, int n_t, double dx);
+
+// thomas algorithm is a test code to test the implicit schemes, the test() function implements thomas_algorithm
 void thomas_algorithm(const std::vector<double>& a,
                       const std::vector<double>& b,
                       const std::vector<double>& c,
@@ -18,9 +20,9 @@ void thomas_algorithm(const std::vector<double>& a,
                       std::vector<double>& f);
 void test();
 
-void output(double *,int);
+void output(double *,int);//putting data in a file, later to be plotted with matlab
 
-void random_walk(int n);
+void random_walk(int n);           //codes for the statistical solutions of diffusion
 void random_walk_gaussian(int n);
 
 // function for gaussian random numbers
